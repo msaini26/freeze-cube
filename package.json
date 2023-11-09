@@ -1,0 +1,13 @@
+{
+    "name": "scrabble-runner",
+    "version": "1.0.0",
+    "description": "A simple one-button endless runner game",
+    "scripts": {
+      "watch_games": "light-server -s docs -w \"docs/**/* # # reload\""
+    },
+    "author": "msaini26",
+    "license": "MIT",
+    "devDependencies": {
+      "light-server": "^2.7.0"
+    }
+  }
