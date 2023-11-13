@@ -27,7 +27,8 @@ characters = [
    l  l
    l  l
     ll
-   `
+   `,
+
 ]
 
 // game design variable container
@@ -54,72 +55,60 @@ options = {
 };
 
 // define variables
-// create moving bubbles on the screen that store position
-// of object and speed
-/** 
- * @typedef {{
- * pos: Vector,
- * speed: number
- * }} Bubble
- */
+/** @type {{pos: Vector, vy: number, size: number}[]} */
+let rects;
+let nextRectDist;
+/** @type {{x: number, vy: number}} */
+let ship;
 
-// define initial bubbles array
-/**
- * @type { Bubble [] }
- * 
- */
-let bubbles;
-
-// the game loop function
 function update() {
+  if (!ticks) {
+    rects = [];
+    nextRectDist = 0;
+    addRect(60);
+    addRect(40);
+    addRect(20);
+  }
 
-    if (!ticks) {
-        bubbles = times(10, () => {
-            // random position
-            const posX = rnd(0, G.WIDTH);
-            const posY = rnd(0, G.HEIGHT);
-        
-        // an object of type bubble with properties
-        return {
-            // create a vector
-            pos: vec(posX, posY),
-            speed: rnd(G.BUBBLE_MIN_SPEED, G.BUBBLE_MAX_SPEED)
-        };
-    });
+  // set rectangle speed and distance 
+  const RECTANGLE_SPEED = difficulty * rnd(0.01, 0.4);
+  const DIFFERENCE = difficulty * 0.2;
+  nextRectDist -= DIFFERENCE;
+
+  if (nextRectDist < 0) { // add more rectangles when there are less on screen
+    const size = addRect();
+    nextRectDist = rnd(10, size); // set next rectangle distance
+  }
+
+  // remove and update rectangle locations
+  remove(rects, (r) => {
+
+    // move rectangles across screen
+    // harder level: diagonal speed
+    if (difficulty > 3) {
+        r.pos.y += RECTANGLE_SPEED;
     }
+    
+    // horizontal movement
+    r.pos.x -= RECTANGLE_SPEED;
 
-    // draw and update each bubble
-    bubbles.forEach((b) => {
-        // Move bubble to the left
-        b.pos.x -= b.speed;
-        // bring bubble back to the right once past left of screen
-        b.pos.wrap(0, G.WIDTH, 0, G.HEIGHT * rnd(1.5, 2));
+    // draw rectangle lines
+    line(r.pos.x , r.pos.y + r.size, r.pos.x  + r.size, r.pos.y);
+    line(r.pos.x, r.pos.y + r.size, r.pos.x - r.size, r.pos.y);
+    line(r.pos.x - r.size, r.pos.y, r.pos.x, r.pos.y - r.size);
+    line(r.pos.x, r.pos.y - r.size, r.pos.x + r.size, r.pos.y);
+  });
 
-        // color to draw with
-        color("black");
-        // draw the bubble with a large size
-        char("a", b.pos);
-    })
+  // color of rectangles
+  color("black");
 
-
-
-    // // the init function running at startup
-    // if (!ticks) {
-    //     bubbles = [];
-    //     nextBubbleDist = 0;    
-    // }
-
-    // // spawn bubbles
-    // if (bubbles.length === 0) {
-    //     // set bubble speed based on random generated number and increased difficulty
-    //     currentBubbleSpeed = rnd(G.BUBBLE_MIN_BASE_SPEED, G.BUBBLE_MAX_BASE_SPEED) * difficulty;
-
-    //     for (let i = 0; i < 9; i++) {
-    //         const posX = rnd(0, G.WIDTH);
-    //         const posY = -rnd(i * G.HEIGHT * 0.1);
-    //         bubbles.push({
-    //             pos: vec(posX, posY)
-    //         });
-    //     }
-    // }
+ 
+  // create a randomized size rectangle
+  function addRect(y = 0) {
+    const t = rnd() < 0.3;
+    const size = t ? rnd(7, 12) : rnd(20, 30);
+    const x = t ? rnd(10, 150) : 50 + rnds(40, (90 / difficulty));
+    rects.push({ pos: vec(x, y + rnd(5, 90)), vy: 0, size });
+    return size;
+  }
 }
