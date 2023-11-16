@@ -3,7 +3,7 @@ title = "freeze cube";
 
 // description, which is also displayed on the title screen
 description = `Spacebar to jump. 
-avoid cube edges`;
+cube edges = points`;
 
 // The array of custom sprites
 characters = [
@@ -40,6 +40,11 @@ l  l
   LLLL
  LL/L
 LLLLL
+`,
+`
+g g g
+g g g g
+g g g
 `,
 ];
 
@@ -88,8 +93,11 @@ function update() {
     addRect(20);
 
     // initialize player
-    player = { pos: vec(64, 32), vel: vec(0, 0), isJumping: true };
+    player = { pos: vec(75, 50), vel: vec(0, 0), isJumping: true };
   }
+
+  // keep player within the screen
+  player.pos.clamp(0, G.WIDTH, 0, G.HEIGHT + 8);
 
   // set rectangle speed and distance
   const RECTANGLE_SPEED = difficulty * rnd(0.1, 0.4);
@@ -139,14 +147,12 @@ function update() {
     top_right = line(r.pos.x, r.pos.y - r.size, r.pos.x + r.size, r.pos.y);
 
     // when the player is in the rectangle
-    if (char("e", player.pos).isColliding.rect.black) {
+    if (char("f", player.pos).isColliding.rect.black) {
       addScore(0.01);
-      color("light_cyan");
+      color("light_green");
       particle(player.pos, 1, 5);
       player.vel = vec(5, 0);
     }
-
-
 
     // if outside of the left window frame
     return r.pos.x < -50;
@@ -172,8 +178,7 @@ function update() {
   }
   
   // render player
-  color("light_red");
-  char("e", player.pos, 50);
+  char("f", player.pos, 50);
 
   // color of rectangles
   color("black");
