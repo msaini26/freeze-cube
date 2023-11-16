@@ -7,43 +7,19 @@ cube edges = points`;
 
 // The array of custom sprites
 characters = [
-  `
- llll
-l    l
-ll  ll
-l    l
-l ll l
- llll 
-   `,
-  `
-llllll
-ll l l
-ll l l
-llllll
-ll  ll
-   `,
   // circle
   `
- lll
-lllll
-lllll
- lll
-   `,
-  `
- ll
-l  l
-l  l
- ll
+  rr
+ rrrr
+rrrrrr
+rrrrrr
+ rrrr
+  rr
    `,
 
-  `
-  LLLL
- LL/L
-LLLLL
-`,
 `
+g g g 
 g g g
-g g g g
 g g g
 `,
 ];
@@ -78,14 +54,22 @@ let nextRectDist;
 /** @type {{pos: Vector, vel: Vector, isJumping: boolean}} */
 let player;
 
+// rectangle lines
 let top_left;
 let bottom_left;
 let bottom_right;
 let top_right;
 
+// bullets
+/** @type {{pos: Vector, vx: number}[]} */
+let bullets;
+let nextBulletDist;
+
 function update() {
   if (!ticks) {
     // before game starts
+
+    // rectangles
     rects = [];
     nextRectDist = 0;
     addRect(60);
@@ -94,10 +78,14 @@ function update() {
 
     // initialize player
     player = { pos: vec(75, 50), vel: vec(0, 0), isJumping: true };
+
+    // bullets
+    bullets = [];
+    nextBulletDist = 99;
   }
 
   // keep player within the screen
-  player.pos.clamp(0, G.WIDTH, 0, G.HEIGHT + 8);
+  player.pos.clamp(0, G.WIDTH, -20, G.HEIGHT + 8);
 
   // set rectangle speed and distance
   const RECTANGLE_SPEED = difficulty * rnd(0.1, 0.4);
@@ -114,27 +102,27 @@ function update() {
   remove(rects, (r) => {
     // move rectangles across screen
     if (difficulty > 3) {
-      r.pos.y -= RECTANGLE_SPEED * 5;
+      r.pos.y -= RECTANGLE_SPEED * 7;
     }
     if (difficulty > 2.75) {
-      r.pos.x += RECTANGLE_SPEED * 4.5;
+      r.pos.x += RECTANGLE_SPEED * 5.5;
     }
 
     if (difficulty > 2.5) {
-      r.pos.y += RECTANGLE_SPEED * 4;
+      r.pos.y += RECTANGLE_SPEED * 5;
     }
 
     if (difficulty > 2) {
-      r.pos.x -= RECTANGLE_SPEED * 3;
+      r.pos.x -= RECTANGLE_SPEED * 4;
     }
 
     // harder level: diagonal speed
     if (difficulty > 1.5) {
-      r.pos.y += RECTANGLE_SPEED * 2;
+      r.pos.y += RECTANGLE_SPEED * 3;
     }
 
     if (difficulty > 1) {
-      r.pos.y -= RECTANGLE_SPEED * 1.2;
+      r.pos.y -= RECTANGLE_SPEED * 1.5;
     }
 
     // horizontal movement
@@ -147,15 +135,15 @@ function update() {
     top_right = line(r.pos.x, r.pos.y - r.size, r.pos.x + r.size, r.pos.y);
 
     // when the player is in the rectangle
-    if (char("f", player.pos).isColliding.rect.black) {
-      addScore(0.01);
+    if (char("b", player.pos).isColliding.rect.black) {
+      addScore(0.04);
       color("light_green");
       particle(player.pos, 1, 5);
       player.vel = vec(5, 0);
     }
 
     // if outside of the left window frame
-    return r.pos.x < -50;
+    return r.pos.x < -50 || r.pos.x > 200 || r.pos.y < -50 || r.pos.y > 150;
   });
 
   // constantly update player position with velocity
@@ -174,20 +162,37 @@ function update() {
   if (input.isJustPressed) {
     console.log("jumping");
     play("jump"); // jump sound effect
-    player.vel.y = -3.5; // set velocity y to negative 
+    player.vel.y = -2; // set velocity y to negative 
   }
   
-  // render player
-  char("f", player.pos, 50);
+  // double render player for squish effect
+  char("b", player.pos, 50);
 
   // color of rectangles
   color("black");
 
   // player out of screen
-  if (player.pos.y > G.HEIGHT + 7) {
+  if (player.pos.y > G.HEIGHT + 7 || player.pos.y < 0) {
     play("explosion");
     end();
   }
+
+  nextBulletDist -= sqrt(difficulty);
+  if (nextBulletDist < 10) {
+    bullets.push({ pos: vec(203, rndi(10, 90)), vx: rnd(1, difficulty) * 0.3 });
+    nextBulletDist += rnd(50, 80) / sqrt(difficulty);
+  }
+  color("black");
+  remove(bullets, (b) => {
+    b.pos.x -= b.vx + sqrt(difficulty);
+    const c = char("a", b.pos).isColliding.char.b;
+    if (c) {
+        play("explosion");
+        end();
+      }
+   return b.pos.x < -3;
+  });
+
 }
 
 // create a randomized size rectangle
@@ -198,5 +203,3 @@ function addRect(y = 0) {
   rects.push({ pos: vec(x, y + rnd(5, 90)), vy: 0, size });
   return size;
 }
-
-// TODO: add coins
