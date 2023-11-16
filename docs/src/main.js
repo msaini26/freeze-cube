@@ -21,7 +21,7 @@ ll l l
 llllll
 ll  ll
    `,
-   // circle
+  // circle
   `
  lll
 lllll
@@ -35,11 +35,11 @@ l  l
  ll
    `,
 
-`
+  `
   LLLL
  LL/L
 LLLLL
-`
+`,
 ];
 
 // game design variable container
@@ -69,11 +69,12 @@ options = {
 /** @type {{pos: Vector, vy: number, size: number}[]} */
 let rects;
 let nextRectDist;
-/** @type {{y: number, vy: number}} */
+/** @type {{pos: Vector, vel: Vector, isJumping: boolean}} */
 let player;
 
 function update() {
-  if (!ticks) { // before game starts
+  if (!ticks) {
+    // before game starts
     rects = [];
     nextRectDist = 0;
     addRect(60);
@@ -81,7 +82,7 @@ function update() {
     addRect(20);
 
     // initialize player
-    player = { y: 0, vy: 0 };
+    player = { pos: vec(64, 32), vel: vec(0, 0), isJumping: true };
   }
 
   // set rectangle speed and distance
@@ -111,36 +112,49 @@ function update() {
     line(r.pos.x, r.pos.y + r.size, r.pos.x - r.size, r.pos.y);
     line(r.pos.x - r.size, r.pos.y, r.pos.x, r.pos.y - r.size);
     line(r.pos.x, r.pos.y - r.size, r.pos.x + r.size, r.pos.y);
+
+    // when the player is in the rectangle
+    if (player.pos.x )
+
+
+
+    // if outside of the left window frame
+    return r.pos.x < -50;
   });
 
-  const JUMP_DIFFERENCE = sqrt(difficulty);
+  // constantly update player position with velocity
+  //player.pos.x += player.vel.x;
+  player.pos.y += player.vel.y;
+
+  console.log(player.pos);
+
+  const INCREASE_VEL = 0.2;
+
+  // constantly increment velocity
+  player.vel.x += INCREASE_VEL;
+  player.vel.y += INCREASE_VEL;
+
+  // when key is pressed
   if (input.isJustPressed) {
-    play("jump");
-    player.vy = -2 * JUMP_DIFFERENCE;
+    console.log("jumping");
+    play("jump"); // jump sound effect
+    player.vel.y = -2; // set velocity y to negative 
   }
 
-  if (player.y === 0) {
-    player.y += player.vy;
-  }
 
-  if (player.y < 0) {
-    const pvy = player.vy;
-    player.vy += (input.isPressed ? 1 : 3) * 0.03 * difficulty;
-    player.vy *= 0.98;
-  }
-
+  // render player
   color("black");
-  char("e", 50, 50);
+  char("e", player.pos, 50);
 
   // color of rectangles
   color("black");
+}
 
-  // create a randomized size rectangle
-  function addRect(y = 0) {
-    const t = rnd() < 0.3;
-    const size = t ? rnd(7, 12) : rnd(20, 30);
-    const x = t ? rnd(10, 150) : 50 + rnds(40, 90 / difficulty);
-    rects.push({ pos: vec(x, y + rnd(5, 90)), vy: 0, size });
-    return size;
-  }
+// create a randomized size rectangle
+function addRect(y = 0) {
+  const t = rnd() < 0.3;
+  const size = t ? rnd(7, 12) : rnd(20, 30);
+  const x = t ? rnd(10, 150) : 50 + rnds(40, 90 / difficulty);
+  rects.push({ pos: vec(x, y + rnd(5, 90)), vy: 0, size });
+  return size;
 }
