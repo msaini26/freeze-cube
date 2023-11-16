@@ -1,8 +1,9 @@
 // title of the game to displayed on the title screen
-title = "bubble speed";
+title = "freeze cube";
 
 // description, which is also displayed on the title screen
-description = `Spacebar to jump.`;
+description = `Spacebar to jump. 
+avoid cube edges`;
 
 // The array of custom sprites
 characters = [
@@ -60,7 +61,7 @@ options = {
   captureCanvasScale: 2, // extra setting for isCapturingGameCanvasOnly, set scale of output file
   seed: 1, // starting state of random number generator for background music (BGM) and sound effects
   isPlayingBgm: true, // background music
-  // theme: "shapeDark",
+  theme: "shapeDark",
   // TODO: uncomment depending on space and game size
   isReplayEnabled: true, // replays your run after game ends
 };
@@ -71,6 +72,11 @@ let rects;
 let nextRectDist;
 /** @type {{pos: Vector, vel: Vector, isJumping: boolean}} */
 let player;
+
+let top_left;
+let bottom_left;
+let bottom_right;
+let top_right;
 
 function update() {
   if (!ticks) {
@@ -86,7 +92,7 @@ function update() {
   }
 
   // set rectangle speed and distance
-  const RECTANGLE_SPEED = difficulty * rnd(0.01, 0.4);
+  const RECTANGLE_SPEED = difficulty * rnd(0.1, 0.4);
   const DIFFERENCE = difficulty * 0.2;
   nextRectDist -= DIFFERENCE;
 
@@ -99,22 +105,46 @@ function update() {
   // remove and update rectangle locations
   remove(rects, (r) => {
     // move rectangles across screen
-    // harder level: diagonal speed
     if (difficulty > 3) {
-      r.pos.y += RECTANGLE_SPEED;
+      r.pos.y -= RECTANGLE_SPEED * 5;
+    }
+    if (difficulty > 2.75) {
+      r.pos.x += RECTANGLE_SPEED * 4.5;
+    }
+
+    if (difficulty > 2.5) {
+      r.pos.y += RECTANGLE_SPEED * 4;
+    }
+
+    if (difficulty > 2) {
+      r.pos.x -= RECTANGLE_SPEED * 3;
+    }
+
+    // harder level: diagonal speed
+    if (difficulty > 1.5) {
+      r.pos.y += RECTANGLE_SPEED * 2;
+    }
+
+    if (difficulty > 1) {
+      r.pos.y -= RECTANGLE_SPEED * 1.2;
     }
 
     // horizontal movement
     r.pos.x -= RECTANGLE_SPEED;
 
     // draw rectangle lines
-    line(r.pos.x, r.pos.y + r.size, r.pos.x + r.size, r.pos.y);
-    line(r.pos.x, r.pos.y + r.size, r.pos.x - r.size, r.pos.y);
-    line(r.pos.x - r.size, r.pos.y, r.pos.x, r.pos.y - r.size);
-    line(r.pos.x, r.pos.y - r.size, r.pos.x + r.size, r.pos.y);
+    bottom_right = line(r.pos.x, r.pos.y + r.size, r.pos.x + r.size, r.pos.y);
+    bottom_left = line(r.pos.x, r.pos.y + r.size, r.pos.x - r.size, r.pos.y);
+    top_left = line(r.pos.x - r.size, r.pos.y, r.pos.x, r.pos.y - r.size);
+    top_right = line(r.pos.x, r.pos.y - r.size, r.pos.x + r.size, r.pos.y);
 
     // when the player is in the rectangle
-    if (player.pos.x )
+    if (char("e", player.pos).isColliding.rect.black) {
+      addScore(0.01);
+      color("light_cyan");
+      particle(player.pos, 1, 5);
+      player.vel = vec(5, 0);
+    }
 
 
 
@@ -126,7 +156,7 @@ function update() {
   //player.pos.x += player.vel.x;
   player.pos.y += player.vel.y;
 
-  console.log(player.pos);
+  // console.log(player.pos);
 
   const INCREASE_VEL = 0.2;
 
@@ -138,16 +168,21 @@ function update() {
   if (input.isJustPressed) {
     console.log("jumping");
     play("jump"); // jump sound effect
-    player.vel.y = -2; // set velocity y to negative 
+    player.vel.y = -3.5; // set velocity y to negative 
   }
-
-
+  
   // render player
-  color("black");
+  color("light_red");
   char("e", player.pos, 50);
 
   // color of rectangles
   color("black");
+
+  // player out of screen
+  if (player.pos.y > G.HEIGHT + 7) {
+    play("explosion");
+    end();
+  }
 }
 
 // create a randomized size rectangle
@@ -158,3 +193,5 @@ function addRect(y = 0) {
   rects.push({ pos: vec(x, y + rnd(5, 90)), vy: 0, size });
   return size;
 }
+
+// TODO: add coins
